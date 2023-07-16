@@ -10,7 +10,8 @@ id:{
 },
 email:{
     type:Sequelize.STRING,
-    allowNull:false
+    allowNull:false,    
+    unique:true
 },
 password:{
     type:Sequelize.STRING,
@@ -22,8 +23,7 @@ name:{
 },
 phone:{
     type:Sequelize.STRING,
-    allowNull:false,
-    unique:true
+    allowNull:false
 },
 
 

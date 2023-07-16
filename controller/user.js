@@ -1,13 +1,15 @@
 const user=require('../models/users');
 const bcrypt=require('bcrypt')
 const sequelize=require('../util/database')
+const jwt=require('jsonwebtoken')
+
 
 exports.create=async(req,res,next)=>{
    
     try{
-  const result=await user.findOne({where:{phone:req.body.phone}})
+  const result=await user.findOne({where:{email:req.body.email}})
   if(result){
-    res.status(400).json({msg:"This phone number is already registered"})
+    res.status(400).json({msg:"This email is already registered"})
    
   }else{
   
@@ -27,4 +29,19 @@ exports.create=async(req,res,next)=>{
 
     }
     catch(err){res.status(401).json({msg:"something went wrong"})}
+}
+
+exports.login=async(req,res,next)=>{
+  console.log(process.env.JWTsecretKey)
+try{
+const result=await(user.findOne({where:{email:req.body.email}})) 
+if(!result) res.status(404).json({msg:"user not found"})
+ const compared=await bcrypt.compare(req.body.password,result.password)
+ if(compared){
+  const token=jwt.sign({id:result.id},process.env.JWTsecretKey)
+  res.json({msg:"user login successful",token:token})
+ }
+ else res.status(401).json({msg:"user not authorized"})
+}
+catch(err){}
 }
