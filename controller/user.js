@@ -43,5 +43,7 @@ if(!result) res.status(404).json({msg:"user not found"})
  }
  else res.status(401).json({msg:"user not authorized"})
 }
-catch(err){}
+catch(err){
+  console.log(err)
+}
 }
