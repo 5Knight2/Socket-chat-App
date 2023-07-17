@@ -39,7 +39,7 @@ if(!result) res.status(404).json({msg:"user not found"})
  const compared=await bcrypt.compare(req.body.password,result.password)
  if(compared){
   const token=jwt.sign({id:result.id},process.env.JWTsecretKey)
-  res.json({msg:"user login successful",token:token})
+  res.json({msg:"user login successful",token:token,name:result.name})
  }
  else res.status(401).json({msg:"user not authorized"})
 }

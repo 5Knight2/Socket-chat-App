@@ -13,7 +13,9 @@ exports.sendmsg=async(req,res,next)=>{
 
 exports.getChat=async(req,res,next)=>{
     try{
-     const chat=await Chat.findAll();
+     const chat=await Chat.findAll({attributes:['id','msg'] ,
+     include: User,
+     order:[['createdAt','ASC']]});
      res.status(201).json(chat)
     }catch(err){
      res.status(401).json({msg:"something went wrong"})
