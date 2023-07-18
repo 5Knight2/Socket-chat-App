@@ -1,13 +1,14 @@
 const authorization=require('../middleware/authetication');
+const group=require('../middleware/group');
 const chat=require('../controller/chat');
 const express=require('express');
 
 const router=express.Router()
 
-router.post('/msg',authorization.authenticate,chat.sendmsg)
+router.post('/msg',authorization.authenticate,group.authenticate,chat.sendmsg)
 
 
-router.get('/msg/:id',authorization.authenticate,chat.getChat)
+router.get('/msg/:id',authorization.authenticate,group.authenticate,chat.getChat)
 
 
 
