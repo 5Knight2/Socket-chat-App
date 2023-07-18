@@ -7,7 +7,7 @@ const router=express.Router()
 router.post('/msg',authorization.authenticate,chat.sendmsg)
 
 
-router.get('/msg',authorization.authenticate,chat.getChat)
+router.get('/msg/:id',authorization.authenticate,chat.getChat)
 
 
 
