@@ -7,8 +7,9 @@ exports.authenticate=async(req,res,next)=>{
         req.groupId=Number(req.query.grpid);
         const grpmember=await GroupMember.findOne({where:{userId:req.user.id,groupId:req.query.grpid}});
         if(grpmember){
-        next()}
-        else res.status.json({msg:"You are not part of this group"})
+            req.grpmember=grpmember;
+          next()}
+        else res.status(401).json({msg:"You are not part of this group"})
         
     
     

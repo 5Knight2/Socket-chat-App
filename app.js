@@ -30,8 +30,6 @@ User.belongsToMany(Group,{through:group_Members})
 Group.belongsToMany(User,{through:group_Members})
 
 
-
-
 sequelize
 //.sync({force:true})
 .sync()
