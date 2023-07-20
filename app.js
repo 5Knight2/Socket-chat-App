@@ -2,6 +2,7 @@ const express=require('express')
 const bodyParser=require('body-parser')
 const cors=require('cors')
 const dotenv=require('dotenv').config()
+const path=require('path')
 
 
 const msg_route=require('./routes/chat')
@@ -21,6 +22,9 @@ app.use(bodyParser.json())
 app.use(signup_route)
 app.use(msg_route)
 app.use(group_route)
+app.use((req,res)=>{
+    res.sendFile(path.join(__dirname,'public/',req.url))
+})
 
 User.hasMany(Chat);
 Chat.belongsTo(User);
