@@ -12,8 +12,6 @@ try{
     next()}
     else res.status.json({msg:"Authentication failed Login again"})
     
-
-
 }catch(err){
     res.status(401).json({msg:"something went wrong try again later"});
 }

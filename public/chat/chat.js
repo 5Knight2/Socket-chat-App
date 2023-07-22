@@ -6,6 +6,15 @@ div1.addEventListener("click",opengroup);
 let lastmsg=0;
 let groupid=0;
 
+const socket = io('http://localhost:3000',{auth:{token:localStorage.getItem('token')}});
+await socket.on("connect", () => {
+    console.log(socket.id); 
+  });
+  console.log(socket.id); 
+  
+socket.on("receive_message",(msg,name)=>{console.log(msg)
+    addmsg(name,msg);
+})
 
 showGroups();
 
@@ -19,8 +28,8 @@ async function opengroup(e){
         div1.append(document.createElement('br'))
         showfirst()
         
- const a=setInterval(() =>{ 
- showall()} , 1000)
+        showall()
+       
        
     }else if(e.target.id=='addAdmin'){
         const emailid=e.target.parentElement.firstChild.textContent;
@@ -128,15 +137,14 @@ function showfirst(){
 
 async function  sendmsg(e){
     e.preventDefault()
-    try{
-        
+    try{ 
         const msg={message:document.querySelector('#message').value}
-        
-const result=await axios.post(baseURL+'msg/'+'?grpid='+groupid,msg,{headers:{Authorization:localStorage.getItem('token')}})
+        await socket.emit('send_message',msg,groupid)
+//const result=await axios.post(baseURL+'msg/'+'?grpid='+groupid,msg,{headers:{Authorization:localStorage.getItem('token')}})
 
-if(result.data.msg=="message stored in database")
+//if(result.data.msg=="message stored in database")
 //addmsg("You",msg.message);
-document.querySelector('#message').value=''
+//document.querySelector('#message').value=''
     }catch(err){console.log(err)}
 
 }
