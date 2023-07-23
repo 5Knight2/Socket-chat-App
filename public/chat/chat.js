@@ -7,13 +7,15 @@ let lastmsg=0;
 let groupid=0;
 
 const socket = io('http://localhost:3000',{auth:{token:localStorage.getItem('token')}});
-await socket.on("connect", () => {
+ socket.on("connect", () => {
     console.log(socket.id); 
   });
-  console.log(socket.id); 
+  
   
 socket.on("receive_message",(msg,name)=>{console.log(msg)
     addmsg(name,msg);
+})
+socket.on("error_response",(msg)=>{alert(msg)
 })
 
 showGroups();
@@ -29,6 +31,8 @@ async function opengroup(e){
         showfirst()
         
         showall()
+        socket.emit('join_room',groupid,localStorage.getItem('email'))
+
        
        
     }else if(e.target.id=='addAdmin'){
@@ -71,9 +75,10 @@ async function opengroup(e){
         display_Users(group.id);
     }else if(e.target.id=='Add'){
         const div1_child=div1.childNodes
+        socket.emit('join_room',div1_child[3].id,div1_child[4].value)
         axios.post(baseURL+'addmember?grpid='+div1_child[3].id,{email:div1_child[4].value},{headers:{Authorization:localStorage.getItem('token')}})
-        .then((result)=>{alert('useradded')})
-        .catch(err=>{alert(err.response.data.msg)})
+         .then((result)=>{alert('useradded')})
+         .catch(err=>{alert(err.response.data.msg)})
     }
 }
 

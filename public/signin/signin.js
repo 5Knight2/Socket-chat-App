@@ -10,6 +10,7 @@ function login(e){
     .then((response)=>{
         localStorage.setItem('token',response.data.token)
         localStorage.setItem('name',response.data.name)
+        localStorage.setItem('email',response.data.email)
         alert("Login successful")
         location.href="http://127.0.0.1:5500/chat/chat.html";
     })

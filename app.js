@@ -50,23 +50,41 @@ sequelize
     console.log(socket.id)
 
     socket.on('send_message',(msg,grpid)=>{
-        console.log(msg)
-        
+
             const userObj=jwt.verify(socket.handshake.auth.token,process.env.JWTsecretKey)
         
             User.findOne({where:{id:userObj.id}}).then((user)=>{if(user){
                 
-                group_Members.findOne({where:{userId:user.id,groupId:grpid}}).then((grpmember)=>{if(grpmember){
+                group_Members.findOne({where:{userId:user.id,groupId:grpid}})
+                .then((grpmember)=>{
+                    if(grpmember){
                     user.createChat({msg:msg.message,name:user.name,groupId:grpid});
-                    socket.to(grpid).emit("receive_message",msg.message,user.name)
+                    io.to(grpid).emit("receive_message",msg.message,user.name)
                   }
-                else throw(new Error("You are not part of this group"))})
+                else socket.emit('error_response', "You are not part of this group")})
                 .catch(err=>{console.log(err)})
                 
-                }else throw(new Error("Authentication failed Login again"))})
+                }else socket.emit('error_response', "Authentication failed Login again")})
                 .catch((err)=>{console.log(err)})       
         
     })
+    socket.on('join_room',(grpid,email)=>{
+
+        const userObj=jwt.verify(socket.handshake.auth.token,process.env.JWTsecretKey)
+    
+        User.findOne({where:{id:userObj.id}}).then((user)=>{if(user){
+            
+            group_Members.findOne({where:{userId:user.id,groupId:grpid}}).then((grpmember)=>{
+                if(grpmember){
+                socket.join(grpid)
+              }
+            else socket.emit('error_response', "You are not part of this group")})
+            .catch(err=>{console.log(err)})
+            
+            }else socket.emit('error_response', "Authentication failed Login again")})
+            .catch((err)=>{console.log(err)})       
+    
+})
 })
 
   
