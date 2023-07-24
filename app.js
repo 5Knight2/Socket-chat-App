@@ -4,6 +4,7 @@ const bodyParser=require('body-parser')
 const dotenv=require('dotenv').config()
 const path=require('path')
 const jwt=require('jsonwebtoken');
+const aws=require('aws-sdk')
 
 
 const msg_route=require('./routes/chat')
@@ -49,40 +50,48 @@ sequelize
    io.on('connection',(socket)=>{
     console.log(socket.id)
 
-    socket.on('send_message',(msg,grpid)=>{
-
+    socket.on('send_message',async (msg,grpid)=>{
+try{
             const userObj=jwt.verify(socket.handshake.auth.token,process.env.JWTsecretKey)
         
-            User.findOne({where:{id:userObj.id}}).then((user)=>{if(user){
+            const user=await User.findOne({where:{id:userObj.id}})
+            if(user){
                 
-                group_Members.findOne({where:{userId:user.id,groupId:grpid}})
-                .then((grpmember)=>{
+                const grpmember=await group_Members.findOne({where:{userId:user.id,groupId:grpid}})
+                
                     if(grpmember){
-                    user.createChat({msg:msg.message,name:user.name,groupId:grpid});
-                    io.to(grpid).emit("receive_message",msg.message,user.name)
-                  }
-                else socket.emit('error_response', "You are not part of this group")})
-                .catch(err=>{console.log(err)})
-                
-                }else socket.emit('error_response', "Authentication failed Login again")})
-                .catch((err)=>{console.log(err)})       
-        
-    })
-    socket.on('join_room',(grpid,email)=>{
+                        if(msg.data=='text'){
+                    await user.createChat({msg:msg.message,name:user.name,groupId:grpid});
+                    io.to(grpid).emit("receive_message",msg.message,user.name)}
+                    else{
+                        const FILE_NAME=user.email+new Date()+'.txt';
 
+                        const URL= await update(msg.message,FILE_NAME,msg.data);
+                        await user.createChat({msg:URL,name:user.name,groupId:grpid});
+                    io.to(grpid).emit("receive_message",URL,user.name)
+                    }
+                  }
+                else socket.emit('error_response', "You are not part of this group")
+
+                }else socket.emit('error_response', "Authentication failed Login again")
+                       
+            }catch(err){console.log(err)}
+    })
+    socket.on('join_room',async(grpid,email)=>{
+        try{
         const userObj=jwt.verify(socket.handshake.auth.token,process.env.JWTsecretKey)
     
-        User.findOne({where:{id:userObj.id}}).then((user)=>{if(user){
+        const user=await User.findOne({where:{id:userObj.id}})
+        if(user){
             
-            group_Members.findOne({where:{userId:user.id,groupId:grpid}}).then((grpmember)=>{
+            const grpmember= await group_Members.findOne({where:{userId:user.id,groupId:grpid}})
                 if(grpmember){
                 socket.join(grpid)
               }
-            else socket.emit('error_response', "You are not part of this group")})
-            .catch(err=>{console.log(err)})
-            
-            }else socket.emit('error_response', "Authentication failed Login again")})
-            .catch((err)=>{console.log(err)})       
+            else socket.emit('error_response', "You are not part of this group")
+            }else socket.emit('error_response', "Authentication failed Login again")
+             }
+            catch(err){console.log(err)}      
     
 })
 })
@@ -92,3 +101,36 @@ sequelize
     })
 .catch((err)=>{console.log(err)})
 
+
+
+async function update(data,FILE_NAME,type){
+    const KEY=process.env.AWS_KEY;
+    const SECRET=process.env.AWS_SECRET;
+    const BUCKET_NAME=process.env.AWS_BUCKET_NAME;
+
+    let S3Bucket=new aws.S3({
+        accessKeyId:KEY,
+        secretAccessKey:SECRET,
+        Bucket:BUCKET_NAME
+    })
+
+    var params={
+        Bucket:BUCKET_NAME,
+        Key:FILE_NAME,
+        Body:data,
+        ACL:'public-read',
+        ContentType:type
+    }
+
+    return new Promise((resolve, reject)=>{
+     S3Bucket.upload(params,(err,response)=>{
+        
+        if(err){
+         reject(err)}
+        else{
+             resolve(response.Location);
+        }})
+    })
+    
+
+} 

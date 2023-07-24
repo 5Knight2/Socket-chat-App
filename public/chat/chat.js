@@ -13,6 +13,7 @@ const socket = io('http://localhost:3000',{auth:{token:localStorage.getItem('tok
   
   
 socket.on("receive_message",(msg,name)=>{console.log(msg)
+
     addmsg(name,msg);
 })
 socket.on("error_response",(msg)=>{alert(msg)
@@ -142,9 +143,14 @@ function showfirst(){
 
 async function  sendmsg(e){
     e.preventDefault()
-    try{ 
-        const msg={message:document.querySelector('#message').value}
-        await socket.emit('send_message',msg,groupid)
+    let msg;
+    const file=document.querySelector('#file')
+    try{if(!file.value) {
+        msg={data:'text',message:document.querySelector('#message').value}
+        }
+        else{ 
+        msg={data:file.files[0].type,message:file.files[0]}}
+        await socket.emit('send_message',msg,groupid,)
 //const result=await axios.post(baseURL+'msg/'+'?grpid='+groupid,msg,{headers:{Authorization:localStorage.getItem('token')}})
 
 //if(result.data.msg=="message stored in database")
@@ -179,6 +185,7 @@ localStorage.setItem('msg'+groupid,JSON.stringify(msg));
 }
 
 function addmsg(name,message){
+    
     const div=document.querySelector('#div1')
 const p=document.createElement('p')
 p.classList.add('rounded-3')
@@ -188,8 +195,14 @@ if(name==localStorage.getItem('name')){
 p.style.borderRightWidth="0px";
 name='You'}
 else p.style.borderLeftWidth="0px";
-
-    p.appendChild(document.createTextNode(name+': '+message))
+if(message.startsWith('http')){
+    p.appendChild(document.createTextNode(name+': '))
+    const anchor=document.createElement('a')
+    anchor.href=message;
+    anchor.appendChild(document.createTextNode('link'))
+    p.appendChild(anchor)
+}else{
+    p.appendChild(document.createTextNode(name+': '+message))}
     div.appendChild(p);
 
 }
