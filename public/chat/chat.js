@@ -1,10 +1,16 @@
 const sendbtn=document.querySelector('#send');
 const div1=document.querySelector('#div1');
+const Load=document.querySelector('#Load');
+
+Load.addEventListener('click',load_More)
 const baseURL="http://localhost:3000/";
 sendbtn.addEventListener("click",sendmsg);
 div1.addEventListener("click",opengroup);
 let lastmsg=0;
+let firstmsg=0;
 let groupid=0;
+let page=0;
+let hasnext=1;
 
 const socket = io('http://localhost:3000',{auth:{token:localStorage.getItem('token')}});
  socket.on("connect", () => {
@@ -134,6 +140,7 @@ div1.appendChild(h4);
 }
 
 function showfirst(){
+    div1.insertBefore(document.createElement('br'), div1.firstChild);
    let msg= localStorage.getItem('msg'+groupid)
    if(msg){msg=JSON.parse(msg)
    for(let i=0;i<msg.length;i++){
@@ -163,28 +170,35 @@ async function  sendmsg(e){
 async function showall(){
 
 try{
+   
       let msg=localStorage.getItem('msg'+groupid);
       if(msg){
       msg=JSON.parse(msg);
-      lastmsg=msg[msg.length-1].id}
+      lastmsg=msg[msg.length-1].id
+    firstmsg=msg[0].id
+    }
       else msg=[];
      if (!lastmsg)lastmsg=0;
-   const result=await axios.get(baseURL+'msg/'+lastmsg+'?grpid='+groupid,{headers:{Authorization:localStorage.getItem('token')}})
-   if(!result.data.length){return}
-   if (lastmsg==result.data[result.data.length-1].id)return
+   let result=await axios.get(baseURL+'msg/'+lastmsg+'?grpid='+groupid+'&page='+page,{headers:{Authorization:localStorage.getItem('token')}})
    
-
-lastmsg=result.data[result.data.length-1].id;
+  
+   result=result.data.chat;
+   if(!result.length){return}
+   
+   if (lastmsg==result[0].id)return
+   
+   firstmsg=result[result.length-1].id;
+lastmsg=result[0].id;
 const div=document.querySelector('#div1')
-   for(let i=0;i<result.data.length;i++){
-   addmsg(result.data[i].user.name,result.data[i].msg)
-    msg.push(result.data[i]);
+   for(let i=result.length-1;i>=0;i--){
+   addmsg(result[i].user.name,result[i].msg)
+    msg.push(result[i]);
 }
 localStorage.setItem('msg'+groupid,JSON.stringify(msg));
 }catch(err){console.log(err)}
 }
 
-function addmsg(name,message){
+function addmsg(name,message,start){
     
     const div=document.querySelector('#div1')
 const p=document.createElement('p')
@@ -203,6 +217,24 @@ if(message.startsWith('http')){
     p.appendChild(anchor)
 }else{
     p.appendChild(document.createTextNode(name+': '+message))}
-    div.appendChild(p);
+    if(start) div1.insertBefore(p, div1.childNodes[1]);
+    else div.appendChild(p);
 
+}
+
+
+
+async function load_More(){
+    if(hasnext>0){
+    let result=await axios.get(baseURL+'msg/'+firstmsg+'?grpid='+groupid+'&page='+page+'&less='+true,{headers:{Authorization:localStorage.getItem('token')}})
+    hasnext=result.data.hasnext;
+    
+    result=result.data.chat;
+    if(!result.length){return}
+    firstmsg=result[result.length-1].id;
+    
+    for(let i=0;i<result.length;i++){
+    addmsg(result[i].user.name,result[i].msg,true)
+     }
+ }else {alert('no more data')}
 }

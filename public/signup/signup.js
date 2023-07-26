@@ -17,11 +17,11 @@ else pass2.setCustomValidity("");
 
         axios.post(baseURL+'signup',{fname:fname.value,email:email.value,phone:phone.value,password:pass2.value})
 .then(()=>{alert("user created successfully")
-window.location.href("http://127.0.0.1:5500/signin/signin.html")})
+window.location.href("http://localhost:3000/signin/signin.html")})
 .catch((err)=>{
     if (err.response.data.msg=='This phone number is already registered')
 {alert("user already exists try logging in")
-window.location.href="http://127.0.0.1:5500/signin/signin.html"}   else alert("Something went wrong try again later")})
+window.location.href="http://localhost:3000/signin/signin.html"}   else alert("Something went wrong try again later")})
  
     }else{
         signup_form.classList.add('was-validated')
